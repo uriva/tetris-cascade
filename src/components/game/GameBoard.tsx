@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import { TetrisEngine } from '@/lib/tetris/engine';
 import { GameRenderer } from '@/lib/tetris/renderer';
 import { ClearEvent } from '@/lib/tetris/types';
+import { BOARD_WIDTH, TETROMINO_SHAPES } from '@/lib/tetris/constants';
 
 interface GameBoardProps {
   engine: TetrisEngine;
@@ -236,6 +237,102 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     };
   }, [engine, onPauseToggle]);
 
+  // Mouse Control Handlers
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const relX = e.clientX - rect.left;
+    const col = Math.floor((relX / rect.width) * BOARD_WIDTH);
+    const clampedCol = Math.max(0, Math.min(BOARD_WIDTH - 1, col));
+
+    rendererRef.current?.setHoverColumn(clampedCol);
+
+    if (
+      engine.settings.mouseControl &&
+      engine.status === 'playing' &&
+      engine.activePiece
+    ) {
+      const shape =
+        TETROMINO_SHAPES[engine.activePiece.type][engine.activePiece.rotation];
+      let minC = 99;
+      let maxC = -99;
+      for (let r = 0; r < shape.length; r++) {
+        for (let c = 0; c < shape[0].length; c++) {
+          if (shape[r][c] !== 0) {
+            minC = Math.min(minC, c);
+            maxC = Math.max(maxC, c);
+          }
+        }
+      }
+      const pieceCenter = Math.floor((minC + maxC) / 2);
+      const targetAnchorX = clampedCol - pieceCenter;
+
+      if (engine.activePiece.x < targetAnchorX) {
+        while (engine.activePiece && engine.activePiece.x < targetAnchorX) {
+          if (!engine.moveRight()) break;
+        }
+      } else if (engine.activePiece.x > targetAnchorX) {
+        while (engine.activePiece && engine.activePiece.x > targetAnchorX) {
+          if (!engine.moveLeft()) break;
+        }
+      }
+    }
+  };
+
+  const handleMouseLeave = () => {
+    rendererRef.current?.setHoverColumn(null);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!engine.settings.mouseControl) return;
+
+    if (engine.status === 'gameover') {
+      engine.start();
+      return;
+    }
+    if (engine.status === 'paused') {
+      if (onPauseToggle) onPauseToggle();
+      return;
+    }
+    if (engine.status !== 'playing') return;
+
+    if (e.button === 0) {
+      // Left Click
+      if (engine.settings.mouseClickAction === 'drop') {
+        engine.hardDrop();
+      } else {
+        engine.rotate(true);
+      }
+    } else if (e.button === 2) {
+      // Right Click
+      e.preventDefault();
+      if (engine.settings.mouseClickAction === 'drop') {
+        engine.rotate(true);
+      } else {
+        engine.hardDrop();
+      }
+    } else if (e.button === 1) {
+      // Middle Click -> Hold
+      e.preventDefault();
+      engine.hold();
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    if (!engine.settings.mouseControl || engine.status !== 'playing') return;
+    e.preventDefault();
+
+    if (e.deltaY > 25) {
+      engine.softDrop();
+    } else if (e.deltaY < -25) {
+      engine.rotate(false);
+    }
+  };
+
   // Touch Swipe Gestures on Canvas
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
     if (e.touches.length !== 1) return;
@@ -277,9 +374,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       {/* Canvas */}
       <canvas
         ref={canvasRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onMouseDown={handleMouseDown}
+        onContextMenu={handleContextMenu}
+        onWheel={handleWheel}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="w-[260px] h-[520px] sm:w-[300px] sm:h-[600px] rounded-xl block cursor-pointer touch-none"
+        className="w-[260px] h-[520px] sm:w-[300px] sm:h-[600px] rounded-xl block cursor-crosshair touch-none"
       />
 
       {/* Paused Overlay */}

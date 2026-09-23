@@ -286,6 +286,8 @@ export const DEFAULT_SETTINGS: GameSettings = {
   screenShake: false,
   crtEffect: false,
   particlesEnabled: true,
+  mouseControl: true,
+  mouseClickAction: 'rotate',
   das: 130, // ms initial delay
   arr: 28,  // ms repeat rate
 };

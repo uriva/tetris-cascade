@@ -22,6 +22,7 @@ export class GameRenderer {
   private shakeIntensity: number = 0;
   private shakeDecay: number = 0.9;
   private textCounter: number = 0;
+  private hoverColumn: number | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -49,6 +50,10 @@ export class GameRenderer {
 
   public triggerScreenShake(intensity: number): void {
     this.shakeIntensity = Math.min(24, Math.max(this.shakeIntensity, intensity));
+  }
+
+  public setHoverColumn(col: number | null): void {
+    this.hoverColumn = col;
   }
 
   public addParticle(particle: Particle): void {
@@ -172,6 +177,11 @@ export class GameRenderer {
     // 1. Draw Background
     this.drawBackground(w, h);
 
+    // 1.5 Draw Hover Beam for Mouse Aiming
+    if (this.hoverColumn !== null && engine.settings.mouseControl && engine.status === 'playing') {
+      this.drawHoverBeam(h);
+    }
+
     // 2. Draw Grid Lines
     this.drawGrid(w, h);
 
@@ -218,6 +228,18 @@ export class GameRenderer {
     grad.addColorStop(1, '#05060a');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
+  }
+
+  private drawHoverBeam(h: number): void {
+    if (this.hoverColumn === null) return;
+    const ctx = this.ctx;
+    const colX = this.hoverColumn * this.cellSize;
+    const beamGrad = ctx.createLinearGradient(colX, 0, colX + this.cellSize, 0);
+    beamGrad.addColorStop(0, 'rgba(0, 229, 255, 0.02)');
+    beamGrad.addColorStop(0.5, 'rgba(0, 229, 255, 0.09)');
+    beamGrad.addColorStop(1, 'rgba(0, 229, 255, 0.02)');
+    ctx.fillStyle = beamGrad;
+    ctx.fillRect(colX, 0, this.cellSize, h);
   }
 
   private drawGrid(w: number, h: number): void {

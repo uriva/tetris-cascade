@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
-import { Volume2, Music, Sparkles, Monitor, Layers, Keyboard, Activity } from 'lucide-react';
+import { Volume2, Music, Sparkles, Monitor, Layers, Keyboard, Activity, Mouse } from 'lucide-react';
 import { sound } from '@/lib/sound/synth';
 
 interface SettingsModalProps {
@@ -198,6 +198,59 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onCheckedChange={checked => onUpdateSettings({ particlesEnabled: checked })}
               />
             </div>
+          </div>
+
+          {/* Mouse Controls */}
+          <div className="flex flex-col gap-3 p-3 rounded-xl bg-black/30 border border-white/5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold text-cyan-300">
+                <Mouse className="w-4 h-4 text-cyan-400" />
+                <span>Mouse Pointer Control</span>
+              </div>
+              <Switch
+                checked={settings.mouseControl}
+                onCheckedChange={checked => onUpdateSettings({ mouseControl: checked })}
+              />
+            </div>
+
+            {settings.mouseControl && (
+              <div className="flex flex-col gap-2 pt-1 border-t border-white/5">
+                <div className="text-xs text-white/70">Left Click Action:</div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ mouseClickAction: 'rotate' })}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      settings.mouseClickAction === 'rotate'
+                        ? 'border-cyan-400 bg-cyan-500/20 text-white font-bold'
+                        : 'border-white/10 bg-black/30 text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-semibold text-cyan-300">Rotate CW</div>
+                    <div className="text-[10px] text-white/50">Right click drops</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onUpdateSettings({ mouseClickAction: 'drop' })}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      settings.mouseClickAction === 'drop'
+                        ? 'border-cyan-400 bg-cyan-500/20 text-white font-bold'
+                        : 'border-white/10 bg-black/30 text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-semibold text-cyan-300">Hard Drop</div>
+                    <div className="text-[10px] text-white/50">Right click rotates</div>
+                  </button>
+                </div>
+
+                <div className="text-[11px] text-white/50 space-y-0.5 pt-1">
+                  <div>• Move mouse horizontally to steer piece column</div>
+                  <div>• Mouse wheel: Scroll down to soft drop, up to rotate CCW</div>
+                  <div>• Middle click: Hold piece</div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Keybindings Reference */}

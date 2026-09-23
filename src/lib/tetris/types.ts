@@ -120,6 +120,8 @@ export interface GameSettings {
   screenShake: boolean;
   crtEffect: boolean;
   particlesEnabled: boolean;
+  mouseControl: boolean;
+  mouseClickAction: 'rotate' | 'drop';
   das: number; // Delayed Auto Shift (ms)
   arr: number; // Auto Repeat Rate (ms)
 }

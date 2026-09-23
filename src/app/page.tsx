@@ -357,11 +357,9 @@ export default function TetrisGamePage() {
       {/* Footer Info */}
       <footer className="relative z-10 w-full max-w-5xl flex items-center justify-between text-[11px] font-mono text-white/40 pt-3 border-t border-white/5 mt-2">
         <div className="hidden sm:flex items-center gap-3">
-          <span>Move: <strong className="text-white/70">← / →</strong></span>
-          <span>Soft Drop: <strong className="text-white/70">↓</strong></span>
-          <span>Hard Drop: <strong className="text-white/70">Space</strong></span>
-          <span>Rotate: <strong className="text-white/70">↑ / Z</strong></span>
-          <span>Hold: <strong className="text-white/70">C</strong></span>
+          <span>Keyboard: <strong className="text-white/70">Arrows / Space / C</strong></span>
+          <span>•</span>
+          <span>Mouse: <strong className="text-white/70">Move to Steer • Left Click: Rotate • Right Click: Drop</strong></span>
         </div>
         <div className="flex items-center gap-2 ml-auto">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
