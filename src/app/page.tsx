@@ -96,8 +96,23 @@ export default function TetrisGamePage() {
     // Auto start game
     engine.start();
 
+    // Unlock browser audio policy on first user gesture
+    const unlockAudio = () => {
+      sound.initContext();
+      if (engine.settings.musicEnabled) {
+        sound.startBGM();
+      }
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+
+    window.addEventListener('pointerdown', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+
     return () => {
       sound.stopBGM();
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
       engine.setOnStateChange(undefined);
       engine.setOnGameOver(undefined);
     };
@@ -212,14 +227,26 @@ export default function TetrisGamePage() {
           {/* Quick Music Toggle */}
           <Button
             variant="ghost"
-            size="icon"
-            onClick={() => handleUpdateSettings({ musicEnabled: !settings.musicEnabled })}
-            className={`w-8 h-8 rounded-lg hover:bg-white/10 ${
-              settings.musicEnabled ? 'text-purple-400' : 'text-white/30'
+            size="sm"
+            onClick={() => {
+              const nextState = !settings.musicEnabled;
+              handleUpdateSettings({ musicEnabled: nextState });
+              sound.initContext();
+              if (nextState) {
+                sound.startBGM();
+              } else {
+                sound.stopBGM();
+              }
+            }}
+            className={`h-8 px-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-mono font-bold ${
+              settings.musicEnabled
+                ? 'bg-purple-950/60 border border-purple-500/40 text-purple-300 shadow-md shadow-purple-500/20'
+                : 'text-white/40 hover:text-white/70 hover:bg-white/10'
             }`}
             title="Toggle Retro Synth BGM"
           >
-            <Music className="w-4 h-4" />
+            <Music className={`w-3.5 h-3.5 ${settings.musicEnabled ? 'text-purple-400 animate-pulse' : 'text-white/40'}`} />
+            <span className="hidden sm:inline text-[10px]">{settings.musicEnabled ? 'BGM ON' : 'BGM OFF'}</span>
           </Button>
 
           {/* Leaderboard Button */}

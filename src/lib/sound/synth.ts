@@ -1,21 +1,246 @@
 /**
- * Zero-dependency Web Audio API Sound Engine for Tetris Cascade
- * Generates all chiptune and modern arcade synth effects procedurally.
+ * Zero-dependency Web Audio API Sound & Music Engine for Tetris Cascade
+ * Generates all retro sound effects and the iconic Tetris Theme A (Korobeiniki) procedurally.
  */
+
+// Note frequency definitions (Hz)
+const N = {
+  REST: 0,
+  A2: 110.00,
+  B2: 123.47,
+  C3: 130.81,
+  D3: 146.83,
+  E3: 164.81,
+  F3: 174.61,
+  G3: 196.00,
+  GS2: 103.83, // G#2
+  GS3: 207.65, // G#3
+  A3: 220.00,
+  B3: 246.94,
+  C4: 261.63,
+  D4: 293.66,
+  E4: 329.63,
+  F4: 349.23,
+  G4: 392.00,
+  GS4: 415.30,
+  A4: 440.00,
+  B4: 493.88,
+  C5: 523.25,
+  D5: 587.33,
+  E5: 659.25,
+  F5: 698.46,
+  G5: 783.99,
+  GS5: 830.61,
+  A5: 880.00,
+  B5: 987.77,
+  C6: 1046.50,
+};
+
+// Full Korobeiniki Theme A (Melody, Bass, Rhythm) in 16th-note steps
+interface MusicStep {
+  lead: number;      // Lead frequency
+  leadDur: number;   // Duration in 16th notes
+  bass: number;      // Bass frequency
+  bassDur: number;   // Duration in 16th notes
+  perc?: 'hat' | 'snare';
+}
+
+// 64 16th-note steps = 4 measures of 4/4 (Section 1) + 64 steps (Section 2) = 128 steps total loop
+function createKorobeinikiPattern(): MusicStep[] {
+  const steps: MusicStep[] = [];
+
+  const add = (lead: number, leadDur: number, bass: number, bassDur: number, perc?: 'hat' | 'snare') => {
+    steps.push({ lead, leadDur, bass, bassDur, perc });
+  };
+
+  // Section 1: E5 - B4 - C5 - D5 - C5 - B4 - A4 - A4 - C5 - E5 - D5 - C5 - B4...
+  // Bar 1
+  add(N.E5, 4, N.E3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.B2, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.B4, 2, N.E3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.B2, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 2
+  add(N.D5, 4, N.E3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.GS2, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.E3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.B4, 2, N.GS2, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 3
+  add(N.A4, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.A4, 2, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 4
+  add(N.E5, 4, N.C3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.G3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.D5, 2, N.C3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.G3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 5
+  add(N.B4, 6, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 6
+  add(N.D5, 4, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.E5, 4, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 7
+  add(N.C5, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.A4, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 8
+  add(N.A4, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Section 2: D5 - F5 - A5 - G5 - F5 - E5 - C5 - E5 - D5 - C5 - B4...
+  // Bar 9
+  add(N.D5, 6, N.D3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.A3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.D3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.F5, 2, N.A3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 10
+  add(N.A5, 4, N.D3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.A3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.G5, 2, N.D3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.F5, 2, N.A3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 11
+  add(N.E5, 6, N.C3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.G3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.C3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.G3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 12
+  add(N.E5, 4, N.C3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.G3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.D5, 2, N.C3, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.G3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 13
+  add(N.B4, 6, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.C5, 2, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 14
+  add(N.D5, 4, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.E5, 4, N.GS2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 15
+  add(N.C5, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.A4, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  // Bar 16
+  add(N.A4, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 4, N.A2, 2, 'hat');
+  add(N.REST, 0, N.REST, 0);
+  add(N.REST, 0, N.E3, 2, 'snare');
+  add(N.REST, 0, N.REST, 0);
+
+  return steps;
+}
+
+const KOROBEINIKI_STEPS = createKorobeinikiPattern();
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private sfxVolume = 0.7;
-  private musicVolume = 0.4;
+  private musicVolume = 0.45;
   private isSoundEnabled = true;
-  private isMusicEnabled = false;
-  private bgmIntervalId: number | null = null;
-  private bgmStep = 0;
+  private isMusicEnabled = true; // Enabled by default!
 
-  private initContext(): AudioContext | null {
+  // Precise Web Audio API lookahead scheduler state
+  private isPlayingBGM = false;
+  private currentStep = 0;
+  private nextStepTime = 0;
+  private schedulerTimerId: number | null = null;
+  private bpm = 138;
+
+  public initContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     if (!this.ctx) {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
       }
@@ -127,7 +352,7 @@ class SoundEngine {
     osc.frequency.setValueAtTime(160, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.12);
 
-    gain.gain.setValueAtTime(this.sfxVolume * 0.5, ctx.currentTime);
+    gain.gain.setValueAtTime(this.sfxVolume * 0.45, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
 
     osc.connect(gain);
@@ -152,7 +377,7 @@ class SoundEngine {
     noiseFilter.frequency.setValueAtTime(1000, ctx.currentTime);
 
     const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(this.sfxVolume * 0.3, ctx.currentTime);
+    noiseGain.gain.setValueAtTime(this.sfxVolume * 0.25, ctx.currentTime);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
 
     noise.connect(noiseFilter);
@@ -219,9 +444,9 @@ class SoundEngine {
     }
 
     const chordMap: Record<number, number[]> = {
-      1: [523.25, 659.25],          // C5, E5
-      2: [523.25, 659.25, 783.99],   // C5, E5, G5
-      3: [659.25, 783.99, 987.77, 1046.50], // E5, G5, B5, C6
+      1: [523.25, 659.25],
+      2: [523.25, 659.25, 783.99],
+      3: [659.25, 783.99, 987.77, 1046.5],
     };
 
     const notes = chordMap[lines] || [523.25, 659.25];
@@ -251,10 +476,10 @@ class SoundEngine {
     if (!ctx) return;
 
     const baseFrequencies = [
-      [587.33, 739.99, 880.00],         // D5, F#5, A5 (Cascade 1)
-      [739.99, 880.00, 1108.73],        // F#5, A5, C#6 (Cascade 2)
-      [880.00, 1108.73, 1318.51],       // A5, C#6, E6 (Cascade 3)
-      [1046.50, 1318.51, 1567.98, 2093.00], // C6, E6, G6, C7 (Cascade 4+)
+      [587.33, 739.99, 880.0],
+      [739.99, 880.0, 1108.73],
+      [880.0, 1108.73, 1318.51],
+      [1046.5, 1318.51, 1567.98, 2093.0],
     ];
 
     const idx = Math.min(step - 1, baseFrequencies.length - 1);
@@ -284,8 +509,7 @@ class SoundEngine {
     const ctx = this.initContext();
     if (!ctx) return;
 
-    // Glorious fanfare: C5, E5, G5, B5, C6
-    const fanfare = [523.25, 659.25, 783.99, 987.77, 1046.50, 1318.51];
+    const fanfare = [523.25, 659.25, 783.99, 987.77, 1046.5, 1318.51];
     const now = ctx.currentTime;
 
     fanfare.forEach((freq, i) => {
@@ -337,7 +561,7 @@ class SoundEngine {
     const ctx = this.initContext();
     if (!ctx) return;
 
-    const notes = [587.33, 523.25, 466.16, 440, 392.00, 349.23, 293.66];
+    const notes = [587.33, 523.25, 466.16, 440, 392.0, 349.23, 293.66];
     const now = ctx.currentTime;
 
     notes.forEach((freq, i) => {
@@ -358,81 +582,150 @@ class SoundEngine {
     });
   }
 
-  // --- Procedural Synthwave / Chiptune Background Music ---
+  // --- Iconic Tetris Theme A (Korobeiniki) Lookahead Scheduler ---
 
   public startBGM(): void {
-    if (this.bgmIntervalId !== null) return;
+    if (this.isPlayingBGM) return;
     const ctx = this.initContext();
     if (!ctx) return;
 
-    // Classic Korobeiniki / Russian Dance inspired cyberpunk bassline
-    // Tempo: ~135 BPM (step interval ~111ms for 16th notes)
-    const bassline = [
-      130.81, 0, 130.81, 0,  // C3
-      116.54, 0, 116.54, 0,  // Bb2
-      103.83, 0, 103.83, 0,  // Ab2
-      98.00,  0, 98.00,  0,  // G2
-    ];
+    this.isPlayingBGM = true;
+    this.currentStep = 0;
+    this.nextStepTime = ctx.currentTime + 0.05;
 
-    const melody = [
-      659.25, 493.88, 523.25, 587.33, // E5, B4, C5, D5
-      523.25, 493.88, 440.00, 0,      // C5, B4, A4
-      440.00, 523.25, 659.25, 587.33, // A4, C5, E5, D5
-      523.25, 493.88, 523.25, 587.33, // C5, B4, C5, D5
-    ];
-
-    const stepMs = 120;
-    this.bgmStep = 0;
-
-    this.bgmIntervalId = window.setInterval(() => {
-      if (!this.isMusicEnabled || !this.ctx) return;
-
-      const now = this.ctx.currentTime;
-      const bFreq = bassline[this.bgmStep % bassline.length];
-      const mFreq = melody[this.bgmStep % melody.length];
-
-      // Bass note
-      if (bFreq > 0) {
-        const bOsc = this.ctx.createOscillator();
-        const bGain = this.ctx.createGain();
-        bOsc.type = 'sawtooth';
-        bOsc.frequency.setValueAtTime(bFreq, now);
-
-        bGain.gain.setValueAtTime(this.musicVolume * 0.12, now);
-        bGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
-        bOsc.connect(bGain);
-        bGain.connect(this.ctx.destination);
-
-        bOsc.start(now);
-        bOsc.stop(now + 0.11);
-      }
-
-      // Melody note
-      if (mFreq > 0) {
-        const mOsc = this.ctx.createOscillator();
-        const mGain = this.ctx.createGain();
-        mOsc.type = 'triangle';
-        mOsc.frequency.setValueAtTime(mFreq, now);
-
-        mGain.gain.setValueAtTime(this.musicVolume * 0.15, now);
-        mGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-
-        mOsc.connect(mGain);
-        mGain.connect(this.ctx.destination);
-
-        mOsc.start(now);
-        mOsc.stop(now + 0.19);
-      }
-
-      this.bgmStep++;
-    }, stepMs);
+    // Run lookahead scheduler every 25ms
+    this.schedulerTimerId = window.setInterval(() => {
+      this.scheduleLoop();
+    }, 25);
   }
 
   public stopBGM(): void {
-    if (this.bgmIntervalId !== null) {
-      clearInterval(this.bgmIntervalId);
-      this.bgmIntervalId = null;
+    this.isPlayingBGM = false;
+    if (this.schedulerTimerId !== null) {
+      clearInterval(this.schedulerTimerId);
+      this.schedulerTimerId = null;
+    }
+  }
+
+  private scheduleLoop(): void {
+    if (!this.isPlayingBGM || !this.isMusicEnabled || !this.ctx) return;
+
+    const scheduleAheadTime = 0.15; // Schedule 150ms ahead
+    const secondsPer16th = 60.0 / (this.bpm * 4.0); // 16th note duration
+
+    while (this.nextStepTime < this.ctx.currentTime + scheduleAheadTime) {
+      const step = KOROBEINIKI_STEPS[this.currentStep % KOROBEINIKI_STEPS.length];
+      this.playStepNotes(step, this.nextStepTime, secondsPer16th);
+
+      this.nextStepTime += secondsPer16th;
+      this.currentStep++;
+    }
+  }
+
+  private playStepNotes(step: MusicStep, time: number, secondsPer16th: number): void {
+    if (!this.ctx) return;
+
+    // 1. Lead Melody Note (Rich square wave with soft filter)
+    if (step.lead > 0 && step.leadDur > 0) {
+      const dur = step.leadDur * secondsPer16th * 0.88; // Slight staccato spacing
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(step.lead, time);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(2400, time);
+
+      gain.gain.setValueAtTime(this.musicVolume * 0.16, time);
+      gain.gain.exponentialRampToValueAtTime(this.musicVolume * 0.12, time + dur * 0.6);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(time);
+      osc.stop(time + dur + 0.02);
+    }
+
+    // 2. Bass Note (Warm triangle/sawtooth punch)
+    if (step.bass > 0 && step.bassDur > 0) {
+      const dur = step.bassDur * secondsPer16th * 0.82;
+      const bOsc = this.ctx.createOscillator();
+      const bGain = this.ctx.createGain();
+
+      bOsc.type = 'triangle';
+      bOsc.frequency.setValueAtTime(step.bass, time);
+
+      bGain.gain.setValueAtTime(this.musicVolume * 0.22, time);
+      bGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+      bOsc.connect(bGain);
+      bGain.connect(this.ctx.destination);
+
+      bOsc.start(time);
+      bOsc.stop(time + dur + 0.02);
+    }
+
+    // 3. Chiptune Percussion (Hi-hat / Snare)
+    if (step.perc) {
+      this.playPercussion(step.perc, time);
+    }
+  }
+
+  private playPercussion(type: 'hat' | 'snare', time: number): void {
+    if (!this.ctx) return;
+
+    if (type === 'hat') {
+      // Metallic noise click
+      const buffer = this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * 0.02), this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / 200);
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(7000, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(this.musicVolume * 0.06, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.02);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      noise.start(time);
+    } else if (type === 'snare') {
+      // 8-bit snare punch
+      const buffer = this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * 0.05), this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / 400);
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1800, time);
+
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(this.musicVolume * 0.09, time);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      noise.start(time);
     }
   }
 }
