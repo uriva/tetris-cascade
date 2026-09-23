@@ -283,7 +283,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   musicEnabled: false,
   sfxVolume: 0.7,
   musicVolume: 0.4,
-  screenShake: true,
+  screenShake: false,
   crtEffect: false,
   particlesEnabled: true,
   das: 130, // ms initial delay

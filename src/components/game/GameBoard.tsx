@@ -51,17 +51,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         renderer.spawnLineClearParticles(event.rows);
       }
 
-      // Screen shake based on clear type
+      // Screen shake only on major clears (Tetris / Triple)
       if (event.isTetris) {
-        renderer.triggerScreenShake(14);
-      } else if (event.linesCleared >= 2) {
-        renderer.triggerScreenShake(6 + event.linesCleared * 2);
+        renderer.triggerScreenShake(8);
+      } else if (event.linesCleared >= 3) {
+        renderer.triggerScreenShake(4);
       }
 
-      // Cascade sparkles and shake
-      if (event.cascadeStep > 1) {
+      // Cascade sparkles and subtle shake on high cascades
+      if (event.cascadeStep >= 3) {
         renderer.spawnCascadeSparkles(event.cascadeStep);
-        renderer.triggerScreenShake(8 + event.cascadeStep * 3);
+        renderer.triggerScreenShake(5);
+      } else if (event.cascadeStep > 1) {
+        renderer.spawnCascadeSparkles(event.cascadeStep);
       }
 
       // Floating text banner
@@ -81,7 +83,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
     engine.setOnHardDrop((x: number, y: number, color: string) => {
       renderer.spawnHardDropParticles(x, y, color);
-      renderer.triggerScreenShake(8);
     });
 
     return () => {
