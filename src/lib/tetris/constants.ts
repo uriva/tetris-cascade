@@ -277,7 +277,7 @@ export const LINE_CLEAR_ANIMATION_MS = 180;
 export const CASCADE_FALL_ANIMATION_MS = 220;
 
 export const DEFAULT_SETTINGS: GameSettings = {
-  gravityMode: 'cascade',
+  gravityMode: 'connected',
   ghostPiece: true,
   soundEnabled: true,
   musicEnabled: true,

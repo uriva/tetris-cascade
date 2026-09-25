@@ -317,10 +317,10 @@ export default function TetrisGamePage() {
           <div className="arcade-panel arcade-panel-cyan p-3 rounded-2xl hidden md:flex flex-col items-center text-center max-w-[190px]">
             <div className="flex items-center gap-1.5 text-xs font-bold text-cyan-300 uppercase mb-1">
               <Layers className="w-3.5 h-3.5 text-cyan-400" />
-              {settings.gravityMode === 'cascade' ? 'Cascade Fall' : 'Connected'}
+              {settings.gravityMode === 'individual' ? 'Free Fall Sand' : 'Connected Cascade'}
             </div>
             <p className="text-[11px] text-white/60 leading-snug">
-              In-air bricks drop into open gaps when rows clear!
+              Bricks only fall when unsupported from below or side!
             </p>
           </div>
 

@@ -72,31 +72,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="grid grid-cols-2 gap-2 text-xs">
               <button
                 type="button"
-                onClick={() => onUpdateSettings({ gravityMode: 'cascade' })}
+                onClick={() => onUpdateSettings({ gravityMode: 'connected' })}
                 className={`p-2 rounded-lg border text-left transition-all ${
-                  settings.gravityMode === 'cascade'
+                  settings.gravityMode !== 'individual'
                     ? 'border-cyan-400 bg-cyan-500/20 text-white font-bold'
                     : 'border-white/10 bg-black/30 text-white/60 hover:text-white'
                 }`}
               >
-                <div className="font-semibold text-cyan-300">Free Fall Cascade</div>
+                <div className="font-semibold text-cyan-300">Connected Cascade</div>
                 <div className="text-[10px] text-white/50 mt-0.5">
-                  Floating bricks drop into gaps, creating chain reactions.
+                  Bricks only fall if nothing holds them down or from the side.
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => onUpdateSettings({ gravityMode: 'connected' })}
+                onClick={() => onUpdateSettings({ gravityMode: 'individual' })}
                 className={`p-2 rounded-lg border text-left transition-all ${
-                  settings.gravityMode === 'connected'
+                  settings.gravityMode === 'individual'
                     ? 'border-purple-400 bg-purple-500/20 text-white font-bold'
                     : 'border-white/10 bg-black/30 text-white/60 hover:text-white'
                 }`}
               >
-                <div className="font-semibold text-purple-300">Connected Clusters</div>
+                <div className="font-semibold text-purple-300">Free Fall Sand</div>
                 <div className="text-[10px] text-white/50 mt-0.5">
-                  Orthogonal pieces drop together until supported.
+                  Individual bricks drop into any gap below.
                 </div>
               </button>
             </div>

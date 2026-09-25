@@ -235,20 +235,24 @@ export function applyConnectedGravity(board: Board): {
 }
 
 /**
- * Universal gravity dispatcher based on user settings
+ * Universal gravity dispatcher based on user settings.
+ * Defaults to connected cascade gravity where bricks only fall if nothing holds them
+ * down (from below) or from the side.
  */
 export function applyGravity(
   board: Board,
-  mode: GravityMode = 'cascade'
+  mode: GravityMode = 'connected'
 ): {
   newBoard: Board;
   fallenBlocks: FallingBlock[];
   hasFallen: boolean;
 } {
-  if (mode === 'connected') {
-    return applyConnectedGravity(board);
+  if (mode === 'individual') {
+    return applyIndividualGravity(board);
   }
-  return applyIndividualGravity(board);
+  // 'connected' and 'cascade' both use connected gravity: bricks stay together
+  // and only drop if unsupported from below and from the side
+  return applyConnectedGravity(board);
 }
 
 /**

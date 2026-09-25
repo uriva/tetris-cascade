@@ -30,7 +30,7 @@ export type GameStatus =
 
 export type GameMode = 'marathon' | 'sprint' | 'ultra' | 'zen';
 
-export type GravityMode = 'cascade' | 'connected';
+export type GravityMode = 'connected' | 'cascade' | 'individual';
 
 export interface FallingBlock {
   fromY: number;

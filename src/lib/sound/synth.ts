@@ -45,7 +45,9 @@ interface MusicStep {
   perc?: 'hat' | 'snare';
 }
 
-// 64 16th-note steps = 4 measures of 4/4 (Section 1) + 64 steps (Section 2) = 128 steps total loop
+// Full Korobeiniki Theme A (Melody, Bass, Rhythm) in 16th-note steps
+// Complete arrangement matching tetris.com / Game Boy classic:
+// Part A (Sections 1 & 2) -> Part A Repeat -> Part C Chorale (Section 3) = 24 measures (384 steps)
 function createKorobeinikiPattern(): MusicStep[] {
   const steps: MusicStep[] = [];
 
@@ -53,167 +55,346 @@ function createKorobeinikiPattern(): MusicStep[] {
     steps.push({ lead, leadDur, bass, bassDur, perc });
   };
 
-  // Section 1: E5 - B4 - C5 - D5 - C5 - B4 - A4 - A4 - C5 - E5 - D5 - C5 - B4...
-  // Bar 1
-  add(N.E5, 4, N.E3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.B2, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.B4, 2, N.E3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.B2, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+  const addSection1 = () => {
+    // Section 1: E5 - B4 - C5 - D5 - C5 - B4 - A4 - A4 - C5 - E5 - D5 - C5 - B4...
+    // Bar 1
+    add(N.E5, 4, N.E3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.B2, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.B4, 2, N.E3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.B2, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 2
-  add(N.D5, 4, N.E3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.GS2, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.E3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.B4, 2, N.GS2, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 2
+    add(N.D5, 4, N.E3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.E3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.B4, 2, N.GS2, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 3
-  add(N.A4, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.A4, 2, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 3
+    add(N.A4, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.A4, 2, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 4
-  add(N.E5, 4, N.C3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.G3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.D5, 2, N.C3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.G3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 4
+    add(N.E5, 4, N.C3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.G3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.D5, 2, N.C3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.G3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 5
-  add(N.B4, 6, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 5
+    add(N.B4, 6, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 6
-  add(N.D5, 4, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.E5, 4, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 6
+    add(N.D5, 4, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.E5, 4, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 7
-  add(N.C5, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.A4, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 7
+    add(N.C5, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.A4, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 8
-  add(N.A4, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 8
+    add(N.A4, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+  };
 
-  // Section 2: D5 - F5 - A5 - G5 - F5 - E5 - C5 - E5 - D5 - C5 - B4...
-  // Bar 9
-  add(N.D5, 6, N.D3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.A3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.D3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.F5, 2, N.A3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+  const addSection2 = () => {
+    // Section 2: D5 - F5 - A5 - G5 - F5 - E5 - C5 - E5 - D5 - C5 - B4...
+    // Bar 9
+    add(N.D5, 6, N.D3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.D3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.F5, 2, N.A3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 10
-  add(N.A5, 4, N.D3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.A3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.G5, 2, N.D3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.F5, 2, N.A3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 10
+    add(N.A5, 4, N.D3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.G5, 2, N.D3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.F5, 2, N.A3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 11
-  add(N.E5, 6, N.C3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.G3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.C3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.G3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 11
+    add(N.E5, 6, N.C3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.G3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.C3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.G3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 12
-  add(N.E5, 4, N.C3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.G3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.D5, 2, N.C3, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.G3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 12
+    add(N.E5, 4, N.C3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.G3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.D5, 2, N.C3, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.G3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 13
-  add(N.B4, 6, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.C5, 2, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 13
+    add(N.B4, 6, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.C5, 2, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 14
-  add(N.D5, 4, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.E5, 4, N.GS2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 14
+    add(N.D5, 4, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.E5, 4, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 15
-  add(N.C5, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.A4, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 15
+    add(N.C5, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.A4, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
 
-  // Bar 16
-  add(N.A4, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 4, N.A2, 2, 'hat');
-  add(N.REST, 0, N.REST, 0);
-  add(N.REST, 0, N.E3, 2, 'snare');
-  add(N.REST, 0, N.REST, 0);
+    // Bar 16
+    add(N.A4, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+  };
+
+  // Section 3: The iconic Tetris Theme A Part C / Chorale (matching tetris.com and Game Boy)
+  // E5 (half) - C5 (half) | D5 (half) - B4 (half) | C5 (half) - A4 (half) | GS4 (half) - B4 (half) |
+  // E5 (half) - C5 (half) | D5 (half) - B4 (half) | C5 (quarter) - E5 (quarter) - A5 (half) | GS5 (half) - Cadence Rest
+  const addSection3 = () => {
+    // Bar 17 (Measure 17a): E5 half-note (8 16th steps)
+    add(N.E5, 8, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 18 (Measure 17b): C5 half-note (8 16th steps)
+    add(N.C5, 8, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 19 (Measure 18a): D5 half-note (8 16th steps)
+    add(N.D5, 8, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 20 (Measure 18b): B4 half-note (8 16th steps)
+    add(N.B4, 8, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 21 (Measure 19a): C5 half-note (8 16th steps)
+    add(N.C5, 8, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 22 (Measure 19b): A4 half-note (8 16th steps)
+    add(N.A4, 8, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 23 (Measure 20a): GS4 half-note (8 16th steps)
+    add(N.GS4, 8, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 24 (Measure 20b): B4 half-note (8 16th steps)
+    add(N.B4, 8, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 25 (Measure 21a): E5 half-note (8 16th steps)
+    add(N.E5, 8, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 26 (Measure 21b): C5 half-note (8 16th steps)
+    add(N.C5, 8, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 27 (Measure 22a): D5 half-note (8 16th steps)
+    add(N.D5, 8, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 28 (Measure 22b): B4 half-note (8 16th steps)
+    add(N.B4, 8, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 29 (Measure 23a): C5 quarter (4 steps) + E5 quarter (4 steps)
+    add(N.C5, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.E5, 4, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 30 (Measure 23b): A5 half-note (8 16th steps)
+    add(N.A5, 8, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.A2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 31 (Measure 24a): GS5 half-note (8 16th steps)
+    add(N.GS5, 8, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+
+    // Bar 32 (Measure 24b): Cadence pickup and pause before looping
+    add(N.REST, 0, N.GS2, 2, 'hat');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.E3, 2, 'snare');
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.REST, 0);
+    add(N.REST, 0, N.REST, 0);
+  };
+
+  // Complete canonical arrangement:
+  // 1. Part A (Section 1 + Section 2)
+  addSection1();
+  addSection2();
+  // 2. Part A repeat (Section 1 + Section 2)
+  addSection1();
+  addSection2();
+  // 3. Part C (Section 3 chorale)
+  addSection3();
 
   return steps;
 }
@@ -232,7 +413,7 @@ class SoundEngine {
   private currentStep = 0;
   private nextStepTime = 0;
   private schedulerTimerId: number | null = null;
-  private bpm = 138;
+  private bpm = 144;
 
   public initContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
