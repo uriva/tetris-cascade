@@ -178,11 +178,42 @@ export default function TetrisGamePage() {
   };
 
   const togglePause = useCallback(() => {
-    if (engine.status === 'playing') {
+    if (
+      engine.status === 'playing' ||
+      engine.status === 'clearing' ||
+      engine.status === 'cascading'
+    ) {
       engine.pause();
     } else if (engine.status === 'paused') {
       engine.resume();
     }
+  }, [engine]);
+
+  // Auto-pause game and music on tab loss of focus or visibility change
+  useEffect(() => {
+    const handlePauseOnUnfocus = () => {
+      if (
+        engine.status === 'playing' ||
+        engine.status === 'clearing' ||
+        engine.status === 'cascading'
+      ) {
+        engine.pause();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handlePauseOnUnfocus();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handlePauseOnUnfocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handlePauseOnUnfocus);
+    };
   }, [engine]);
 
   if (!isClient) {
@@ -304,7 +335,7 @@ export default function TetrisGamePage() {
       {/* Main Playfield Layout */}
       <div className="relative z-10 w-full max-w-5xl flex flex-col md:flex-row items-center md:items-start justify-center gap-4 my-auto">
         {/* Left Column: HOLD & Quick Info */}
-        <div className="w-full md:w-48 flex md:flex-col items-center md:items-end justify-between md:justify-start gap-3 order-2 md:order-1">
+        <div className="w-full md:w-52 flex md:flex-col items-center md:items-end justify-between md:justify-start gap-3 order-2 md:order-1">
           {/* Hold Piece Container */}
           <div className="arcade-panel p-3 rounded-2xl flex flex-col items-center">
             <span className="text-[10px] tracking-widest text-white/50 font-bold uppercase mb-1.5">
@@ -345,7 +376,7 @@ export default function TetrisGamePage() {
         </div>
 
         {/* Right Column: NEXT QUEUE & HUD */}
-        <div className="w-full md:w-56 flex flex-col gap-3 order-3">
+        <div className="w-full md:w-64 flex flex-col gap-3 order-3">
           {/* Next Pieces Queue */}
           <div className="arcade-panel p-3 rounded-2xl flex md:flex-col items-center justify-between md:justify-start gap-2">
             <span className="text-[10px] tracking-widest text-white/50 font-bold uppercase">

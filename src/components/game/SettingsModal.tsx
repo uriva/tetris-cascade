@@ -219,6 +219,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <button
                     type="button"
+                    onClick={() => onUpdateSettings({ mouseClickAction: 'drop' })}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      settings.mouseClickAction !== 'rotate'
+                        ? 'border-cyan-400 bg-cyan-500/20 text-white font-bold'
+                        : 'border-white/10 bg-black/30 text-white/60 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-semibold text-cyan-300">Hard Drop</div>
+                    <div className="text-[10px] text-white/50">Right click rotates</div>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => onUpdateSettings({ mouseClickAction: 'rotate' })}
                     className={`p-2 rounded-lg border text-left transition-all ${
                       settings.mouseClickAction === 'rotate'
@@ -229,24 +242,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div className="font-semibold text-cyan-300">Rotate CW</div>
                     <div className="text-[10px] text-white/50">Right click drops</div>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onUpdateSettings({ mouseClickAction: 'drop' })}
-                    className={`p-2 rounded-lg border text-left transition-all ${
-                      settings.mouseClickAction === 'drop'
-                        ? 'border-cyan-400 bg-cyan-500/20 text-white font-bold'
-                        : 'border-white/10 bg-black/30 text-white/60 hover:text-white'
-                    }`}
-                  >
-                    <div className="font-semibold text-cyan-300">Hard Drop</div>
-                    <div className="text-[10px] text-white/50">Right click rotates</div>
-                  </button>
                 </div>
 
                 <div className="text-[11px] text-white/50 space-y-0.5 pt-1">
                   <div>• Move mouse horizontally to steer piece column</div>
-                  <div>• Mouse wheel: Scroll down to soft drop, up to rotate CCW</div>
+                  <div>• Mouse wheel: Scroll down to rotate CW, up to rotate CCW</div>
+                  <div>• Left click: Hard drop • Right click: Rotate</div>
                   <div>• Middle click: Hold piece</div>
                 </div>
               </div>

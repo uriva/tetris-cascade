@@ -28,34 +28,51 @@ export const GameHUD: React.FC<GameHUDProps> = ({ stats, mode, highScore }) => {
   };
 
   const timerInfo = getTimerDisplay();
+  const currentHighScore = Math.max(highScore, stats.score);
+
+  const getScoreFontSize = (val: number) => {
+    const len = val.toLocaleString().length;
+    if (len > 8) return 'text-lg sm:text-xl';
+    if (len > 6) return 'text-xl sm:text-2xl';
+    return 'text-2xl sm:text-3xl';
+  };
+
+  const getHighScoreFontSize = (val: number) => {
+    const len = val.toLocaleString().length;
+    if (len > 8) return 'text-sm sm:text-base';
+    if (len > 6) return 'text-base sm:text-lg';
+    return 'text-lg sm:text-xl';
+  };
 
   return (
     <div className="flex flex-col gap-3 w-full">
       {/* Top Banner: Score & High Score */}
-      <div className="arcade-panel arcade-panel-cyan p-3 rounded-xl flex items-center justify-between">
-        <div>
-          <div className="text-[10px] tracking-widest text-cyan-400 font-bold uppercase flex items-center gap-1">
-            <Zap className="w-3 h-3 text-cyan-400" />
+      <div className="arcade-panel arcade-panel-cyan p-3 rounded-xl flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[10px] tracking-widest text-cyan-400 font-bold uppercase flex items-center gap-1 shrink-0">
+            <Zap className="w-3.5 h-3.5 text-cyan-400" />
             Current Score
           </div>
-          <div className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-white text-glow-cyan">
+          <div className={`font-bold font-mono tracking-tight text-white text-glow-cyan text-right truncate ${getScoreFontSize(stats.score)}`}>
             {stats.score.toLocaleString()}
           </div>
         </div>
 
-        <div className="text-right border-l border-white/10 pl-4">
-          <div className="text-[10px] tracking-widest text-amber-400 font-bold uppercase flex items-center justify-end gap-1">
-            <Trophy className="w-3 h-3 text-amber-400" />
+        <div className="h-px bg-white/10 w-full" />
+
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[10px] tracking-widest text-amber-400 font-bold uppercase flex items-center gap-1 shrink-0">
+            <Trophy className="w-3.5 h-3.5 text-amber-400" />
             High Score
           </div>
-          <div className="text-lg sm:text-xl font-bold font-mono text-amber-300">
-            {Math.max(highScore, stats.score).toLocaleString()}
+          <div className={`font-bold font-mono text-amber-300 text-right truncate ${getHighScoreFontSize(currentHighScore)}`}>
+            {currentHighScore.toLocaleString()}
           </div>
         </div>
       </div>
 
       {/* Stats Grid: Level, Lines, Time, Cascade Chain */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 gap-2">
         <div className="arcade-panel p-2.5 rounded-lg text-center">
           <div className="text-[10px] tracking-wider text-white/50 uppercase font-semibold">LEVEL</div>
           <div className="text-xl font-bold text-cyan-300 font-mono">{stats.level}</div>

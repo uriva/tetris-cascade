@@ -770,21 +770,61 @@ class SoundEngine {
     const ctx = this.initContext();
     if (!ctx) return;
 
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
     this.isPlayingBGM = true;
     this.currentStep = 0;
     this.nextStepTime = ctx.currentTime + 0.05;
 
     // Run lookahead scheduler every 25ms
-    this.schedulerTimerId = window.setInterval(() => {
-      this.scheduleLoop();
-    }, 25);
+    if (this.schedulerTimerId === null) {
+      this.schedulerTimerId = window.setInterval(() => {
+        this.scheduleLoop();
+      }, 25);
+    }
   }
 
-  public stopBGM(): void {
+  public pauseBGM(): void {
     this.isPlayingBGM = false;
     if (this.schedulerTimerId !== null) {
       clearInterval(this.schedulerTimerId);
       this.schedulerTimerId = null;
+    }
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
+    }
+  }
+
+  public resumeBGM(): void {
+    if (!this.isMusicEnabled) return;
+    const ctx = this.initContext();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    this.isPlayingBGM = true;
+    this.nextStepTime = ctx.currentTime + 0.05;
+
+    if (this.schedulerTimerId === null) {
+      this.schedulerTimerId = window.setInterval(() => {
+        this.scheduleLoop();
+      }, 25);
+    }
+  }
+
+  public stopBGM(): void {
+    this.isPlayingBGM = false;
+    this.currentStep = 0;
+    if (this.schedulerTimerId !== null) {
+      clearInterval(this.schedulerTimerId);
+      this.schedulerTimerId = null;
+    }
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend().catch(() => {});
     }
   }
 

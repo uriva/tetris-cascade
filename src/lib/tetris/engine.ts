@@ -149,19 +149,22 @@ export class TetrisEngine {
     this.notify();
   }
 
+  private previousStatus: GameStatus = 'playing';
+
   public pause(): void {
-    if (this.status === 'playing') {
+    if (this.status === 'playing' || this.status === 'clearing' || this.status === 'cascading') {
+      this.previousStatus = this.status;
       this.status = 'paused';
-      sound.stopBGM();
+      sound.pauseBGM();
       this.notify();
     }
   }
 
   public resume(): void {
     if (this.status === 'paused') {
-      this.status = 'playing';
+      this.status = this.previousStatus || 'playing';
       if (this.settings.musicEnabled) {
-        sound.startBGM();
+        sound.resumeBGM();
       }
       this.notify();
     }

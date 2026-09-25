@@ -29,6 +29,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
   // Touch gesture tracking on canvas
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const lastWheelTimeRef = useRef<number>(0);
 
   // Initialize renderer and callbacks
   useEffect(() => {
@@ -41,6 +42,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       renderer.updateDimensions();
     };
 
+    const canvas = canvasRef.current;
+    const handleNativeWheel = (e: WheelEvent) => {
+      if (!engine.settings.mouseControl || engine.status !== 'playing') return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastWheelTimeRef.current < 60) return;
+      if (e.deltaY > 15) {
+        lastWheelTimeRef.current = now;
+        engine.rotate(true); // Scroll down -> Rotate CW
+      } else if (e.deltaY < -15) {
+        lastWheelTimeRef.current = now;
+        engine.rotate(false); // Scroll up -> Rotate CCW
+      }
+    };
+
+    canvas.addEventListener('wheel', handleNativeWheel, { passive: false });
     window.addEventListener('resize', handleResize);
 
     // Attach engine callbacks for visual effects
@@ -88,6 +105,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      canvas.removeEventListener('wheel', handleNativeWheel);
       engine.setOnClearEvent(undefined);
       engine.setOnHardDrop(undefined);
     };
@@ -326,10 +344,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     if (!engine.settings.mouseControl || engine.status !== 'playing') return;
     e.preventDefault();
 
-    if (e.deltaY > 25) {
-      engine.softDrop();
-    } else if (e.deltaY < -25) {
-      engine.rotate(false);
+    const now = Date.now();
+    if (now - lastWheelTimeRef.current < 60) return;
+
+    if (e.deltaY > 15) {
+      lastWheelTimeRef.current = now;
+      engine.rotate(true); // Scroll down -> Rotate CW
+    } else if (e.deltaY < -15) {
+      lastWheelTimeRef.current = now;
+      engine.rotate(false); // Scroll up -> Rotate CCW
     }
   };
 
@@ -386,11 +409,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
       {/* Paused Overlay */}
       {engine.status === 'paused' && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center gap-3">
+        <div
+          onClick={onPauseToggle}
+          className="absolute inset-0 bg-black/80 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center gap-3 cursor-pointer z-30"
+        >
           <div className="text-3xl font-extrabold font-mono text-cyan-400 text-glow-cyan tracking-widest animate-pulse">
             PAUSED
           </div>
-          <p className="text-xs text-white/50 tracking-wider">PRESS P OR ESC TO RESUME</p>
+          <p className="text-xs text-white/50 tracking-wider">CLICK, OR PRESS P / ESC TO RESUME</p>
         </div>
       )}
     </div>
