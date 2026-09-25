@@ -26,6 +26,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const keysDownRef = useRef<Map<string, number>>(new Map());
   const dasTimerRef = useRef<number | null>(null);
   const arrIntervalRef = useRef<number | null>(null);
+  const softDropIntervalRef = useRef<number | null>(null);
+  const activeHorizontalDirRef = useRef<'left' | 'right' | null>(null);
 
   // Touch gesture tracking on canvas
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -137,8 +139,46 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     };
   }, [engine]);
 
-  // Keyboard input handlers with DAS/ARR
+  // Keyboard input handlers with independent DAS/ARR and action execution
   useEffect(() => {
+    const startHorizontalDAS = (dir: 'left' | 'right') => {
+      stopHorizontalDAS();
+      activeHorizontalDirRef.current = dir;
+
+      dasTimerRef.current = window.setTimeout(() => {
+        arrIntervalRef.current = window.setInterval(() => {
+          if (dir === 'left') engine.moveLeft();
+          else if (dir === 'right') engine.moveRight();
+        }, engine.settings.arr);
+      }, engine.settings.das);
+    };
+
+    const stopHorizontalDAS = () => {
+      if (dasTimerRef.current !== null) {
+        clearTimeout(dasTimerRef.current);
+        dasTimerRef.current = null;
+      }
+      if (arrIntervalRef.current !== null) {
+        clearInterval(arrIntervalRef.current);
+        arrIntervalRef.current = null;
+      }
+      activeHorizontalDirRef.current = null;
+    };
+
+    const startSoftDrop = () => {
+      stopSoftDrop();
+      softDropIntervalRef.current = window.setInterval(() => {
+        engine.softDrop();
+      }, 35);
+    };
+
+    const stopSoftDrop = () => {
+      if (softDropIntervalRef.current !== null) {
+        clearInterval(softDropIntervalRef.current);
+        softDropIntervalRef.current = null;
+      }
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent scrolling for game controls
       if (
@@ -168,17 +208,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         case 'ArrowLeft':
         case 'KeyA':
           engine.moveLeft();
-          startDAS('left');
+          startHorizontalDAS('left');
           break;
         case 'ArrowRight':
         case 'KeyD':
           engine.moveRight();
-          startDAS('right');
+          startHorizontalDAS('right');
           break;
         case 'ArrowDown':
         case 'KeyS':
           engine.softDrop();
-          startDAS('down');
+          startSoftDrop();
           break;
         case 'Space':
           engine.hardDrop();
@@ -186,6 +226,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         case 'ArrowUp':
         case 'KeyW':
         case 'KeyX':
+          // Immediate spin: does NOT touch or interrupt horizontal movement!
           engine.rotate(true);
           break;
         case 'KeyZ':
@@ -202,47 +243,39 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     const handleKeyUp = (e: KeyboardEvent) => {
       keysDownRef.current.delete(e.code);
 
-      const hasLeft =
-        keysDownRef.current.has('ArrowLeft') || keysDownRef.current.has('KeyA');
-      const hasRight =
-        keysDownRef.current.has('ArrowRight') || keysDownRef.current.has('KeyD');
-      const hasDown =
-        keysDownRef.current.has('ArrowDown') || keysDownRef.current.has('KeyS');
+      const isLeftKey = e.code === 'ArrowLeft' || e.code === 'KeyA';
+      const isRightKey = e.code === 'ArrowRight' || e.code === 'KeyD';
+      const isDownKey = e.code === 'ArrowDown' || e.code === 'KeyS';
 
-      if (!hasLeft && !hasRight && !hasDown) {
-        stopDAS();
-      } else if (hasLeft) {
-        startDAS('left');
-      } else if (hasRight) {
-        startDAS('right');
-      } else if (hasDown) {
-        startDAS('down');
+      if (isDownKey) {
+        const stillHoldingDown =
+          keysDownRef.current.has('ArrowDown') || keysDownRef.current.has('KeyS');
+        if (!stillHoldingDown) {
+          stopSoftDrop();
+        }
       }
-    };
 
-    const startDAS = (dir: 'left' | 'right' | 'down') => {
-      stopDAS();
-      const dasTime = dir === 'down' ? 60 : engine.settings.das;
-      const arrTime = dir === 'down' ? 30 : engine.settings.arr;
+      if (isLeftKey || isRightKey) {
+        const hasLeft =
+          keysDownRef.current.has('ArrowLeft') || keysDownRef.current.has('KeyA');
+        const hasRight =
+          keysDownRef.current.has('ArrowRight') || keysDownRef.current.has('KeyD');
 
-      dasTimerRef.current = window.setTimeout(() => {
-        arrIntervalRef.current = window.setInterval(() => {
-          if (dir === 'left') engine.moveLeft();
-          else if (dir === 'right') engine.moveRight();
-          else if (dir === 'down') engine.softDrop();
-        }, arrTime);
-      }, dasTime);
-    };
-
-    const stopDAS = () => {
-      if (dasTimerRef.current !== null) {
-        clearTimeout(dasTimerRef.current);
-        dasTimerRef.current = null;
+        if (isLeftKey && activeHorizontalDirRef.current === 'left') {
+          stopHorizontalDAS();
+          if (hasRight) {
+            engine.moveRight();
+            startHorizontalDAS('right');
+          }
+        } else if (isRightKey && activeHorizontalDirRef.current === 'right') {
+          stopHorizontalDAS();
+          if (hasLeft) {
+            engine.moveLeft();
+            startHorizontalDAS('left');
+          }
+        }
       }
-      if (arrIntervalRef.current !== null) {
-        clearInterval(arrIntervalRef.current);
-        arrIntervalRef.current = null;
-      }
+      // Releasing rotation, hold, or drop keys leaves horizontal movement completely intact!
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -251,7 +284,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      stopDAS();
+      stopHorizontalDAS();
+      stopSoftDrop();
     };
   }, [engine, onPauseToggle]);
 
@@ -404,7 +438,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         onWheel={handleWheel}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="w-[260px] h-[520px] sm:w-[300px] sm:h-[600px] rounded-xl block cursor-crosshair touch-none"
+        className="w-[260px] h-[520px] sm:w-[300px] sm:h-[600px] rounded-xl block touch-none"
       />
 
       {/* Paused Overlay */}
