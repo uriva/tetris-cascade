@@ -82,8 +82,11 @@ export function applyIndividualGravity(board: Board): {
 
 /**
  * Applies connected cluster gravity:
- * Orthogonally connected groups of bricks drop together as rigid pieces
- * until any cell in the cluster rests on the floor or an already grounded cell.
+ * 1. Initial clusters touching the bottom floor at t=0 are supported. Their overhangs
+ *    stay in the air because they were already connected to a grounded structure.
+ * 2. Unsupported clusters drop downward together as rigid pieces until landing on
+ *    the floor or on a block directly beneath them.
+ * 3. Falling clusters DO NOT stop by gluing to walls/pillars on their sides while falling.
  */
 export function applyConnectedGravity(board: Board): {
   newBoard: Board;
@@ -92,11 +95,6 @@ export function applyConnectedGravity(board: Board): {
 } {
   // Deep copy board
   const currentBoard: Board = board.map(row => [...row]);
-  const fallenBlocks: FallingBlock[] = [];
-  let anyFellOverall = false;
-
-  // Simulate falling step-by-step
-  let stepFell = true;
   const initialPositions = new Map<string, number>();
 
   // Store initial positions of all cells
@@ -109,123 +107,153 @@ export function applyConnectedGravity(board: Board): {
     }
   }
 
-  while (stepFell) {
-    stepFell = false;
+  // 1. Identify initial connected components at t = 0
+  const visited: boolean[][] = Array.from({ length: BOARD_TOTAL_HEIGHT }, () =>
+    Array(BOARD_WIDTH).fill(false)
+  );
+  const clusters: Array<Array<{ x: number; y: number; cell: Cell }>> = [];
 
-    // 1. Identify connected components using BFS/DFS
-    const visited: boolean[][] = Array.from({ length: BOARD_TOTAL_HEIGHT }, () =>
-      Array(BOARD_WIDTH).fill(false)
-    );
-    const clusters: Array<Array<{ x: number; y: number; cell: Cell }>> = [];
+  for (let y = 0; y < BOARD_TOTAL_HEIGHT; y++) {
+    for (let x = 0; x < BOARD_WIDTH; x++) {
+      if (currentBoard[y][x] && !visited[y][x]) {
+        const cluster: Array<{ x: number; y: number; cell: Cell }> = [];
+        const queue: Array<{ x: number; y: number }> = [{ x, y }];
+        visited[y][x] = true;
 
-    for (let y = 0; y < BOARD_TOTAL_HEIGHT; y++) {
-      for (let x = 0; x < BOARD_WIDTH; x++) {
-        if (currentBoard[y][x] && !visited[y][x]) {
-          const cluster: Array<{ x: number; y: number; cell: Cell }> = [];
-          const queue: Array<{ x: number; y: number }> = [{ x, y }];
-          visited[y][x] = true;
+        while (queue.length > 0) {
+          const curr = queue.shift()!;
+          cluster.push({ x: curr.x, y: curr.y, cell: currentBoard[curr.y][curr.x]! });
 
-          while (queue.length > 0) {
-            const curr = queue.shift()!;
-            cluster.push({ x: curr.x, y: curr.y, cell: currentBoard[curr.y][curr.x]! });
+          const neighbors = [
+            { x: curr.x + 1, y: curr.y },
+            { x: curr.x - 1, y: curr.y },
+            { x: curr.x, y: curr.y + 1 },
+            { x: curr.x, y: curr.y - 1 },
+          ];
 
-            const neighbors = [
-              { x: curr.x + 1, y: curr.y },
-              { x: curr.x - 1, y: curr.y },
-              { x: curr.x, y: curr.y + 1 },
-              { x: curr.x, y: curr.y - 1 },
-            ];
-
-            for (const n of neighbors) {
-              if (
-                n.x >= 0 &&
-                n.x < BOARD_WIDTH &&
-                n.y >= 0 &&
-                n.y < BOARD_TOTAL_HEIGHT &&
-                !visited[n.y][n.x] &&
-                currentBoard[n.y][n.x]
-              ) {
-                visited[n.y][n.x] = true;
-                queue.push(n);
-              }
+          for (const n of neighbors) {
+            if (
+              n.x >= 0 &&
+              n.x < BOARD_WIDTH &&
+              n.y >= 0 &&
+              n.y < BOARD_TOTAL_HEIGHT &&
+              !visited[n.y][n.x] &&
+              currentBoard[n.y][n.x]
+            ) {
+              visited[n.y][n.x] = true;
+              queue.push(n);
             }
           }
-
-          clusters.push(cluster);
         }
+
+        clusters.push(cluster);
       }
     }
+  }
 
-    // 2. Identify grounded clusters (clusters touching the bottom floor)
-    const groundedClusterIndices = new Set<number>();
-    for (let i = 0; i < clusters.length; i++) {
-      if (clusters[i].some(pt => pt.y === BOARD_TOTAL_HEIGHT - 1)) {
-        groundedClusterIndices.add(i);
-      }
+  // 2. Identify initial grounded clusters:
+  // Clusters connected to the bottom floor (y = BOARD_TOTAL_HEIGHT - 1) at t = 0 are supported.
+  // Their overhangs stay in the air because they were already connected to a grounded structure.
+  const fallingClusters: Array<Array<{ x: number; y: number; cell: Cell }>> = [];
+
+  for (let i = 0; i < clusters.length; i++) {
+    const cluster = clusters[i];
+    if (!cluster.some(pt => pt.y === BOARD_TOTAL_HEIGHT - 1)) {
+      fallingClusters.push(cluster);
     }
+  }
 
-    // 3. Check which ungrounded clusters can fall down by 1 cell
-    // A cluster can fall if for every cell in the cluster, the cell directly below (x, y+1)
-    // is either part of the same cluster OR empty.
-    let clusterMoved = false;
-    for (let i = 0; i < clusters.length; i++) {
-      if (groundedClusterIndices.has(i)) continue;
+  // If nothing is unsupported, return immediately
+  if (fallingClusters.length === 0) {
+    return { newBoard: currentBoard, fallenBlocks: [], hasFallen: false };
+  }
 
-      const cluster = clusters[i];
-      const clusterCoordSet = new Set(cluster.map(pt => `${pt.x},${pt.y}`));
+  // Clear all falling clusters from the board to simulate their fall downward
+  for (const cluster of fallingClusters) {
+    for (const pt of cluster) {
+      currentBoard[pt.y][pt.x] = null;
+    }
+  }
 
+  // 3. Drop falling clusters step by step.
+  // Falling clusters only stop when hitting the floor or landing on a block beneath them.
+  // Crucially, they DO NOT glue to walls or pillars on their side as they fall!
+  let activeFalling = fallingClusters.map(c => c.map(pt => ({ ...pt })));
+  let stepped = true;
+  let iterations = 0;
+
+  while (stepped && activeFalling.length > 0) {
+    iterations++;
+    if (iterations > 100) break;
+    stepped = false;
+
+    // Sort by lowest points first so lower clusters land before higher clusters
+    activeFalling.sort((a, b) => {
+      const maxYa = Math.max(...a.map(p => p.y));
+      const maxYb = Math.max(...b.map(p => p.y));
+      return maxYb - maxYa;
+    });
+
+    const stillFalling: Array<Array<{ x: number; y: number; cell: Cell }>> = [];
+
+    for (const cluster of activeFalling) {
       let canFall = true;
       for (const pt of cluster) {
         const nextY = pt.y + 1;
         if (nextY >= BOARD_TOTAL_HEIGHT) {
-          canFall = false;
+          canFall = false; // Hit floor
           break;
         }
-        if (currentBoard[nextY][pt.x] && !clusterCoordSet.has(`${pt.x},${nextY}`)) {
-          canFall = false;
+        if (currentBoard[nextY][pt.x] !== null) {
+          canFall = false; // Landed on a block below
           break;
         }
       }
 
       if (canFall) {
-        // Move cluster down by 1
-        // Clear old positions
         for (const pt of cluster) {
-          currentBoard[pt.y][pt.x] = null;
+          pt.y += 1;
         }
-        // Write new positions
+        stepped = true;
+        stillFalling.push(cluster);
+      } else {
+        // Cluster has landed! Place its blocks permanently so clusters above can land on it
         for (const pt of cluster) {
-          currentBoard[pt.y + 1][pt.x] = pt.cell;
+          currentBoard[pt.y][pt.x] = pt.cell;
         }
-        clusterMoved = true;
-        anyFellOverall = true;
-        stepFell = true;
-        break; // Re-evaluate components
+        stepped = true;
       }
     }
 
-    if (!clusterMoved) {
-      stepFell = false;
+    activeFalling = stillFalling;
+  }
+
+  // Place any remaining clusters (safeguard)
+  for (const cluster of activeFalling) {
+    for (const pt of cluster) {
+      currentBoard[pt.y][pt.x] = pt.cell;
     }
   }
 
   // Compile fallen blocks for animation
-  if (anyFellOverall) {
-    for (let y = 0; y < BOARD_TOTAL_HEIGHT; y++) {
-      for (let x = 0; x < BOARD_WIDTH; x++) {
-        const cell = currentBoard[y][x];
-        if (cell) {
-          const id = cell.id || `${x},${y}`;
-          const initialY = initialPositions.get(id);
-          if (initialY !== undefined && initialY !== y) {
-            fallenBlocks.push({
-              fromY: initialY,
-              toY: y,
-              x,
-              cell,
-              progress: 0,
-            });
-          }
+  const fallenBlocks: FallingBlock[] = [];
+  let anyFellOverall = false;
+
+  for (let y = 0; y < BOARD_TOTAL_HEIGHT; y++) {
+    for (let x = 0; x < BOARD_WIDTH; x++) {
+      const cell = currentBoard[y][x];
+      if (cell) {
+        const id = cell.id || `${x},${y}`;
+        const initialY = initialPositions.get(id);
+        if (initialY !== undefined && initialY !== y) {
+          anyFellOverall = true;
+          fallenBlocks.push({
+            fromY: initialY,
+            toY: y,
+            x,
+            cell,
+            progress: 0,
+          });
         }
       }
     }

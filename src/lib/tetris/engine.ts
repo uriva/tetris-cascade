@@ -382,9 +382,28 @@ export class TetrisEngine {
   }
 
   private onPieceMoved(): void {
-    if (this.isLocking && this.lockResets < MAX_LOCK_RESETS) {
+    if (!this.activePiece) return;
+    const isTouchingSurfaceBelow = this.checkCollision(
+      this.activePiece.x,
+      this.activePiece.y + 1,
+      this.activeShape
+    );
+
+    if (!isTouchingSurfaceBelow) {
+      // In mid-air: not grounded, cannot lock or glue from the side!
+      this.isLocking = false;
       this.lockTimer = 0;
-      this.lockResets++;
+    } else {
+      // Touching floor or locked block underneath
+      if (this.isLocking) {
+        if (this.lockResets < MAX_LOCK_RESETS) {
+          this.lockTimer = 0;
+          this.lockResets++;
+        }
+      } else {
+        this.isLocking = true;
+        this.lockTimer = 0;
+      }
     }
   }
 
@@ -403,6 +422,14 @@ export class TetrisEngine {
 
   private lockActivePiece(): void {
     if (!this.activePiece) return;
+
+    // Safety guard: a piece can NEVER lock in mid-air!
+    // A piece can ONLY lock if resting on the bottom floor or on a block underneath it
+    if (!this.checkCollision(this.activePiece.x, this.activePiece.y + 1, this.activeShape)) {
+      this.isLocking = false;
+      this.lockTimer = 0;
+      return;
+    }
 
     const shape = this.activeShape;
     const colorInfo = TETROMINO_COLORS[this.activePiece.type];
@@ -545,8 +572,8 @@ export class TetrisEngine {
     this.stats.score += scoreAwarded;
     this.stats.lines += lines;
 
-    // Check level progression (10 lines per level)
-    const newLevel = Math.min(15, Math.floor(this.stats.lines / 10) + 1);
+    // Check level progression (5 lines per level for faster progression)
+    const newLevel = Math.min(20, Math.floor(this.stats.lines / 5) + 1);
     if (newLevel > this.stats.level) {
       this.stats.level = newLevel;
       sound.playLevelUp();

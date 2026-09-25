@@ -252,29 +252,31 @@ export const WALL_KICKS_I: Record<string, [number, number][]> = {
   '0-3': [[0, 0], [-1, 0], [2, 0], [-1, -2], [2, 1]],
 };
 
-// Gravity drop intervals by level (in milliseconds)
+// Gravity drop intervals by level (in milliseconds) - fast, responsive arcade tuning
 export const LEVEL_SPEEDS: number[] = [
-  800, // Level 1
-  710, // Level 2
-  620, // Level 3
-  530, // Level 4
-  440, // Level 5
-  360, // Level 6
-  280, // Level 7
-  210, // Level 8
-  150, // Level 9
-  105, // Level 10
-  80,  // Level 11
-  60,  // Level 12
-  45,  // Level 13
-  35,  // Level 14
-  25,  // Level 15+
+  520, // Level 1 (faster starting pace)
+  430, // Level 2
+  350, // Level 3
+  280, // Level 4
+  220, // Level 5
+  170, // Level 6
+  130, // Level 7
+  98,  // Level 8
+  75,  // Level 9
+  58,  // Level 10
+  45,  // Level 11
+  35,  // Level 12
+  26,  // Level 13
+  20,  // Level 14
+  15,  // Level 15
+  12,  // Level 16
+  10,  // Level 17+
 ];
 
-export const LOCK_DELAY_MS = 500;
+export const LOCK_DELAY_MS = 450;
 export const MAX_LOCK_RESETS = 15;
-export const LINE_CLEAR_ANIMATION_MS = 180;
-export const CASCADE_FALL_ANIMATION_MS = 220;
+export const LINE_CLEAR_ANIMATION_MS = 140;
+export const CASCADE_FALL_ANIMATION_MS = 160;
 
 export const DEFAULT_SETTINGS: GameSettings = {
   gravityMode: 'connected',
