@@ -10,10 +10,6 @@
     {
       "pattern": "tetris.uriv.me",
       "custom_domain": true
-    },
-    {
-      "pattern": "tetris-cascade.uriv.me",
-      "custom_domain": true
     }
   ],
   "observability": {
