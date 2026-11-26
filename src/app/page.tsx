@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
 import { TetrisEngine } from '@/lib/tetris/engine';
 import { GameBoard } from '@/components/game/GameBoard';
 import { GameHUD } from '@/components/game/GameHUD';
@@ -51,6 +51,7 @@ export default function TetrisGamePage() {
       return DEFAULT_SETTINGS;
     }
   });
+  const settingsRef = useRef(settings);
 
   const [highScore, setHighScore] = useState<number>(() => {
     if (typeof window === 'undefined') return 0;
@@ -93,6 +94,9 @@ export default function TetrisGamePage() {
       setTick(t => t + 1);
     });
 
+    // Sync saved audio preferences before starting the engine
+    sound.syncSettings(settingsRef.current);
+
     // Auto start game
     engine.start();
 
@@ -126,14 +130,53 @@ export default function TetrisGamePage() {
   };
 
   // Update Settings
-  const handleUpdateSettings = (newSettings: Partial<GameSettings>) => {
-    const updated = { ...settings, ...newSettings };
+  const handleUpdateSettings = useCallback((newSettings: Partial<GameSettings>) => {
+    const updated = { ...settingsRef.current, ...newSettings };
+    settingsRef.current = updated;
     setSettings(updated);
     engine.setSettings(updated);
+
+    if (newSettings.soundEnabled !== undefined) {
+      sound.setSoundEnabled(updated.soundEnabled);
+    }
+    if (newSettings.sfxVolume !== undefined) {
+      sound.setSfxVolume(updated.sfxVolume);
+    }
+    if (newSettings.musicVolume !== undefined) {
+      sound.setMusicVolume(updated.musicVolume);
+    }
+    if (newSettings.musicEnabled !== undefined) {
+      if (updated.musicEnabled) {
+        sound.initContext();
+      }
+      sound.setMusicEnabled(updated.musicEnabled);
+      if (updated.musicEnabled && (engine.status === 'paused' || engine.status === 'gameover')) {
+        sound.pauseBGM();
+      }
+    }
+
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
     } catch {}
-  };
+  }, [engine]);
+
+  // Keyboard shortcut: M to toggle music
+  useEffect(() => {
+    const handleMusicKey = (e: KeyboardEvent) => {
+      if (e.code !== 'KeyM' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      ) {
+        return;
+      }
+      handleUpdateSettings({ musicEnabled: !settingsRef.current.musicEnabled });
+    };
+
+    window.addEventListener('keydown', handleMusicKey);
+    return () => window.removeEventListener('keydown', handleMusicKey);
+  }, [handleUpdateSettings]);
 
   // Save High Score & Leaderboard
   const handleSaveScore = (playerName: string) => {
@@ -227,57 +270,57 @@ export default function TetrisGamePage() {
       {settings.crtEffect && <div className="absolute inset-0 scanlines z-40 pointer-events-none" />}
 
       {/* Top Navbar */}
-      <header className="relative z-10 w-full max-w-5xl flex items-center justify-between gap-2 pb-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-            <Flame className="w-5 h-5 text-black" />
+      <header className="relative z-10 w-full max-w-5xl flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
           </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black font-mono tracking-wider text-white flex items-center gap-1.5">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-black font-mono tracking-wider text-white flex items-center gap-1.5 whitespace-nowrap">
               TETRIS <span className="text-cyan-400 text-glow-cyan">CASCADE</span>
             </h1>
-            <p className="text-[9px] sm:text-[10px] text-white/50 tracking-widest font-mono">
+            <p className="hidden sm:block text-[10px] text-white/50 tracking-widest font-mono">
               IN-AIR BRICK GRAVITY // CHAIN REACTIONS
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-1.5">
-          {/* Quick Sound Toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleUpdateSettings({ soundEnabled: !settings.soundEnabled })}
-            className="w-8 h-8 rounded-lg text-white/70 hover:text-white hover:bg-white/10"
-            title="Toggle Sound FX"
-          >
-            {settings.soundEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4 text-white/30" />}
-          </Button>
-
+        <div className="flex items-center gap-1.5 flex-wrap">
           {/* Quick Music Toggle */}
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              const nextState = !settings.musicEnabled;
-              handleUpdateSettings({ musicEnabled: nextState });
-              sound.initContext();
-              if (nextState) {
-                sound.startBGM();
-              } else {
-                sound.stopBGM();
-              }
-            }}
-            className={`h-8 px-2 rounded-lg transition-all flex items-center gap-1.5 text-xs font-mono font-bold ${
+            onClick={() => handleUpdateSettings({ musicEnabled: !settings.musicEnabled })}
+            aria-pressed={settings.musicEnabled}
+            aria-label={settings.musicEnabled ? 'Disable Music' : 'Enable Music'}
+            className={`h-8 px-2.5 rounded-lg transition-all flex items-center gap-1.5 text-xs font-mono font-bold ${
               settings.musicEnabled
-                ? 'bg-purple-950/60 border border-purple-500/40 text-purple-300 shadow-md shadow-purple-500/20'
-                : 'text-white/40 hover:text-white/70 hover:bg-white/10'
+                ? 'bg-purple-950/60 border border-purple-500/40 text-purple-300 shadow-md shadow-purple-500/20 hover:bg-purple-900/60 hover:text-purple-200'
+                : 'bg-white/5 border border-white/15 text-white/50 hover:text-white/80 hover:bg-white/10'
             }`}
-            title="Toggle Retro Synth BGM"
+            title="Toggle Music (M)"
           >
             <Music className={`w-3.5 h-3.5 ${settings.musicEnabled ? 'text-purple-400 animate-pulse' : 'text-white/40'}`} />
-            <span className="hidden sm:inline text-[10px]">{settings.musicEnabled ? 'BGM ON' : 'BGM OFF'}</span>
+            <span className="text-[10px]">{settings.musicEnabled ? 'MUSIC ON' : 'MUSIC OFF'}</span>
+          </Button>
+
+          {/* Quick Sound FX Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleUpdateSettings({ soundEnabled: !settings.soundEnabled })}
+            aria-pressed={settings.soundEnabled}
+            aria-label={settings.soundEnabled ? 'Disable Sound FX' : 'Enable Sound FX'}
+            className={`h-8 px-2 rounded-lg transition-all flex items-center gap-1 text-xs font-mono font-bold ${
+              settings.soundEnabled
+                ? 'text-cyan-300 hover:text-cyan-200 hover:bg-white/10'
+                : 'text-white/35 hover:text-white/70 hover:bg-white/10'
+            }`}
+            title="Toggle Sound FX"
+          >
+            {settings.soundEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4 text-white/35" />}
+            <span className="hidden sm:inline text-[10px]">{settings.soundEnabled ? 'SFX' : 'SFX OFF'}</span>
           </Button>
 
           {/* Leaderboard Button */}
@@ -415,7 +458,7 @@ export default function TetrisGamePage() {
       {/* Footer Info */}
       <footer className="relative z-10 w-full max-w-5xl flex items-center justify-between text-[11px] font-mono text-white/40 pt-3 border-t border-white/5 mt-2">
         <div className="hidden sm:flex items-center gap-3">
-          <span>Keyboard: <strong className="text-white/70">Arrows / Space / C</strong></span>
+          <span>Keyboard: <strong className="text-white/70">Arrows / Space / C / M (Music)</strong></span>
           <span>•</span>
           <span>Mouse: <strong className="text-white/70">Move to Steer • Left Click: Rotate • Right Click: Drop</strong></span>
         </div>

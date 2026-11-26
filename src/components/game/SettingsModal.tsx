@@ -12,7 +12,6 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Volume2, Music, Sparkles, Monitor, Layers, Keyboard, Activity, Mouse } from 'lucide-react';
-import { sound } from '@/lib/sound/synth';
 
 interface SettingsModalProps {
   open: boolean;
@@ -29,24 +28,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const handleSoundToggle = (checked: boolean) => {
     onUpdateSettings({ soundEnabled: checked });
-    sound.setSoundEnabled(checked);
   };
 
   const handleMusicToggle = (checked: boolean) => {
     onUpdateSettings({ musicEnabled: checked });
-    sound.setMusicEnabled(checked);
   };
 
   const handleSfxVolume = (val: number | readonly number[]) => {
     const vol = typeof val === 'number' ? val : val[0];
     onUpdateSettings({ sfxVolume: vol });
-    sound.setSfxVolume(vol);
   };
 
   const handleMusicVolume = (val: number | readonly number[]) => {
     const vol = typeof val === 'number' ? val : val[0];
     onUpdateSettings({ musicVolume: vol });
-    sound.setMusicVolume(vol);
   };
 
   return (
@@ -129,11 +124,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             )}
 
-            {/* Retro Synth BGM */}
+            {/* Music */}
             <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-2 text-sm">
                 <Music className="w-4 h-4 text-purple-400" />
-                <span>Retro Synth BGM</span>
+                <span>Music</span>
               </div>
               <Switch checked={settings.musicEnabled} onCheckedChange={handleMusicToggle} />
             </div>
@@ -269,6 +264,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div><span className="font-mono text-cyan-300">C</span> or <span className="font-mono text-cyan-300">Shift</span>: Hold Piece</div>
               <div><span className="font-mono text-cyan-300">A</span> (in rot): 180° Rotate</div>
               <div><span className="font-mono text-cyan-300">P</span> or <span className="font-mono text-cyan-300">Esc</span>: Pause / Menu</div>
+              <div><span className="font-mono text-cyan-300">M</span>: Toggle Music</div>
             </div>
           </div>
         </div>

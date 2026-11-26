@@ -145,6 +145,36 @@ class SoundEngine {
     return { ctx: this.ctx, dry: this.sfxBus, send: this.reverbSend ?? this.sfxBus };
   }
 
+  public syncSettings(opts: {
+    soundEnabled: boolean;
+    musicEnabled: boolean;
+    sfxVolume: number;
+    musicVolume: number;
+  }): void {
+    this.isSoundEnabled = opts.soundEnabled;
+    this.isMusicEnabled = opts.musicEnabled;
+    this.sfxVolume = Math.max(0, Math.min(1, opts.sfxVolume));
+    this.musicVolume = Math.max(0, Math.min(1, opts.musicVolume));
+
+    if (this.ctx && this.sfxBus) {
+      this.sfxBus.gain.setTargetAtTime(
+        this.isSoundEnabled ? this.sfxVolume : 0,
+        this.ctx.currentTime,
+        0.02,
+      );
+    }
+    if (this.ctx && this.musicBus) {
+      this.musicBus.gain.setTargetAtTime(
+        this.isMusicEnabled && this.isPlayingBGM ? this.musicVolume : 0,
+        this.ctx.currentTime,
+        0.04,
+      );
+    }
+    if (!this.isMusicEnabled && this.isPlayingBGM) {
+      this.stopBGM();
+    }
+  }
+
   public setSoundEnabled(enabled: boolean): void {
     this.isSoundEnabled = enabled;
     if (this.sfxBus && this.ctx) {
@@ -324,7 +354,7 @@ class SoundEngine {
   // --- Iconic Tetris Theme A (Korobeiniki) Lookahead Scheduler ---
 
   public startBGM(): void {
-    if (this.isPlayingBGM) return;
+    if (!this.isMusicEnabled || this.isPlayingBGM) return;
     const ctx = this.initContext();
     if (!ctx || !this.musicBus) return;
 
